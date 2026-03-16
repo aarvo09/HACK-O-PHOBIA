@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Attendance Platform
 
-## Getting Started
+Realtime classroom attendance monitoring with:
+- live dashboard grouped by course and subject
+- camera/agent page with face detection overlays
+- attendance webhook using Gemini analysis
+- class detail page with discrepancy and roster view
 
-First, run the development server:
+## Judge Quick Start (2-5 min)
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Create env file:
+
+```bash
+copy .env.example .env
+```
+
+3. Fill at least `DATABASE_URL` in `.env`.
+4. For email demo (optional but recommended), set:
+	- `GMAIL_USER`
+	- `GMAIL_PASS`
+	- `DEMO_FORWARD_EMAIL` (single inbox to receive all warnings during judging)
+
+4. Prepare DB + seed demo data:
+
+```bash
+npm run setup:demo
+```
+
+5. Start app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## One-command verification
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run judge:ready
+```
 
-## Learn More
+This runs Prisma setup and a production build.
 
-To learn more about Next.js, take a look at the following resources:
+## Demo Flow for Judges (recommended)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Open dashboard (`/`) and show course -> subject -> class hierarchy.
+2. Open any class card to show detailed discrepancy and roster (`/classroom/[id]`).
+3. Open camera page (`/camera`), upload classroom media, and show face detection count.
+4. Trigger webhook (Start/End interval) and show live response payload.
+5. Open history page (`/history`) for report-style summary UI.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notes
 
-## Deploy on Vercel
+- If `GEMINI_API_KEY` is missing, the app uses safe mock AI output so demo still works.
+- If Gmail creds are missing, email warnings are skipped without breaking API flow.
+- The warning email body is generated using the same `GEMINI_API_KEY` (with fallback template if unavailable).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Useful Commands
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run lint
+npm run build
+npm run db:generate
+npm run db:push
+npm run db:seed
+```
+
+## Troubleshooting
+
+- Prisma connection error:
+	- Verify `DATABASE_URL` and that Postgres is running.
+- Empty dashboard:
+	- Run `npm run db:seed`.
+- Camera webhook says no session:
+	- Seed DB and refresh page to populate class sessions.

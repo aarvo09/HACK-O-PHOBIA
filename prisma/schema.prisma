@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Classroom {
+  id        String         @id @default(cuid())
+  name      String // e.g., "Room 101"
+  capacity  Int
+  sessions  ClassSession[]
+  students  Student[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+}
+
+model User {
+  id        String         @id @default(cuid())
+  email     String         @unique
+  name      String
+  role      Role           @default(TEACHER)
+  sessions  ClassSession[] // Classes assigned to this teacher
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Course {
+  id        String    @id @default(cuid())
+  name      String    // e.g., "B.Tech Data Science"
+  subjects  Subject[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Subject {
+  id        String         @id @default(cuid())
+  name      String         // e.g., "Artificial Intelligence"
+  courseId  String
+  course    Course         @relation(fields: [courseId], references: [id])
+  sessions  ClassSession[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model ClassSession {
+  id          String              @id @default(cuid())
+  title       String              // e.g., "Section A - L1"
+  subjectId   String
+  subject     Subject             @relation(fields: [subjectId], references: [id])
+  teacherId   String
+  teacher     User                @relation(fields: [teacherId], references: [id])
+  startTime   DateTime            @default(now())
+  endTime     DateTime?
+  classroomId String
+  classroom   Classroom           @relation(fields: [classroomId], references: [id])
+  captures    AttendanceCapture[]
+  attendances StudentAttendance[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model AttendanceCapture {
+  id             String       @id @default(cuid())
+  sessionId      String
+  session        ClassSession @relation(fields: [sessionId], references: [id])
+  intervalString String // "first_10_min" or "last_10_min"
+  headcount      Int
+  status         String // "attentive", "distracted", etc.
+  aiNotes        String?
+  imageRef       String? // Optional URL/path to the image
+  rawAiResponse  Json? // Full response from Gemini
+  capturedAt     DateTime     @default(now())
+}
+
+model Student {
+  id          String              @id @default(cuid())
+  name        String
+  rollNumber  String
+  classId     String
+  classroom   Classroom           @relation(fields: [classId], references: [id])
+  attendances StudentAttendance[]
+}
+
+model StudentAttendance {
+  id        String       @id @default(cuid())
+  studentId String
+  student   Student      @relation(fields: [studentId], references: [id])
+  sessionId String
+  session   ClassSession @relation(fields: [sessionId], references: [id])
+  isPresent Boolean      @default(false) // Present for the full class
+  leftEarly Boolean      @default(false) // Present at 0m, but absent at 50m
+  notes     String?
+}
