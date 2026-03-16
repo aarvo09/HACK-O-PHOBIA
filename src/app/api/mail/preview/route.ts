@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getWarningEmailPreview } from "@/lib/mailer";
 
-const prisma = new PrismaClient();
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+let prisma: PrismaClient | null = null;
+
+function getPrismaClient(): PrismaClient {
+  if (!prisma) prisma = new PrismaClient();
+  return prisma;
+}
 
 async function getWeakestSubjectInsight(rollNumber: string): Promise<{ subject: string; percentage: number } | null> {
+  const prisma = getPrismaClient();
   const student = await prisma.student.findFirst({
     where: { rollNumber },
     include: {
@@ -45,6 +54,7 @@ async function getWeakestSubjectInsight(rollNumber: string): Promise<{ subject: 
 }
 
 async function getWeakestSubjectInsightByStudentId(studentId: string): Promise<{ subject: string; percentage: number } | null> {
+  const prisma = getPrismaClient();
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     include: {
@@ -94,6 +104,7 @@ function getFallbackSubjectInsight(rollNumber: string): { subject: string; perce
 
 export async function GET(req: NextRequest) {
   try {
+    const prisma = getPrismaClient();
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get("sessionId");
 

@@ -1,13 +1,22 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+let prisma: PrismaClient | null = null;
+
+function getPrismaClient(): PrismaClient {
+  if (!prisma) prisma = new PrismaClient();
+  return prisma;
+}
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const prisma = getPrismaClient();
     const { id } = await params;
 
     const session = await prisma.classSession.findUnique({

@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+let prisma: PrismaClient | null = null;
+
+function getPrismaClient(): PrismaClient {
+  if (!prisma) prisma = new PrismaClient();
+  return prisma;
+}
 
 type SessionRow = {
   id: string;
@@ -44,6 +52,7 @@ type DashboardSubject = {
 };
 
 export async function GET(req: NextRequest) {
+  const prisma = getPrismaClient();
   const { searchParams } = new URL(req.url);
   const role = searchParams.get("role") || "ADMIN";
   const userId = searchParams.get("userId");

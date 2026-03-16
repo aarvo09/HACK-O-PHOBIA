@@ -6,10 +6,16 @@ import { sendAttendanceWarning } from "@/lib/mailer";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient | null = null;
+
+function getPrismaClient(): PrismaClient {
+  if (!prisma) prisma = new PrismaClient();
+  return prisma;
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const prisma = getPrismaClient();
     const {
       sessionId,
       base64Image,
