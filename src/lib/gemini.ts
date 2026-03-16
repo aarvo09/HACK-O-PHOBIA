@@ -1,7 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY || "";
-const genAI = new GoogleGenerativeAI(apiKey);
+
+function getGeminiClient(): GoogleGenerativeAI | null {
+  if (!apiKey) return null;
+  return new GoogleGenerativeAI(apiKey);
+}
 
 export interface AttendanceResult {
   headcount: number;
@@ -36,7 +40,11 @@ export async function analyzeClassroomImage(
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const geminiClient = getGeminiClient();
+    if (!geminiClient) {
+      throw new Error("Gemini client unavailable");
+    }
+    const model = geminiClient.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
       You are an AI classroom monitoring assistant. 
