@@ -51,6 +51,33 @@ type DashboardSubject = {
   }>;
 };
 
+function getShowcaseDashboardData() {
+  return [
+    {
+      id: "course-showcase-1",
+      name: "B.Tech CSE",
+      subjects: [
+        {
+          id: "subject-showcase-1",
+          name: "Algorithms",
+          classes: [
+            {
+              id: "class-showcase-1",
+              title: "Algorithms - Section B",
+              teacher: "Amit Kumar Pandey",
+              room: "Room 204",
+              status: "warning" as const,
+              firstCapture: 58,
+              lastCapture: 44,
+              time: "Live Session",
+            },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
 export async function GET(req: NextRequest) {
   const prisma = getPrismaClient();
   const { searchParams } = new URL(req.url);
@@ -157,6 +184,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ dashboardData });
   } catch (error) {
     console.error("Dashboard API Error:", error);
-    return NextResponse.json({ error: "Failed to fetch dashboard data", detail: String(error) }, { status: 500 });
+    return NextResponse.json({
+      dashboardData: getShowcaseDashboardData(),
+      fallback: true,
+      warning: "Database unavailable. Returning showcase data.",
+    });
   }
 }

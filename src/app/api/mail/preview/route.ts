@@ -102,6 +102,47 @@ function getFallbackSubjectInsight(rollNumber: string): { subject: string; perce
   return { subject, percentage };
 }
 
+async function getShowcaseMailFallback() {
+  const showcase = [
+    { studentName: "Aarav Sharma", rollNumber: "DS-001", attendancePercentage: 72.5, weakestSubject: "Algorithms", weakestSubjectAttendance: 66.0 },
+    { studentName: "Ishita Verma", rollNumber: "DS-002", attendancePercentage: 69.0, weakestSubject: "Data Structures", weakestSubjectAttendance: 62.4 },
+    { studentName: "Rohan Singh", rollNumber: "DS-003", attendancePercentage: 63.2, weakestSubject: "Operating Systems", weakestSubjectAttendance: 58.7 },
+  ];
+
+  const previews = await Promise.all(
+    showcase.map(async (entry) => {
+      const studentEmail = `${entry.rollNumber.toLowerCase()}@university.edu`;
+      const preview = await getWarningEmailPreview(
+        studentEmail,
+        entry.studentName,
+        entry.attendancePercentage,
+        entry.weakestSubject,
+        entry.weakestSubjectAttendance
+      );
+      return {
+        studentName: entry.studentName,
+        rollNumber: entry.rollNumber,
+        attendancePercentage: entry.attendancePercentage,
+        preview,
+      };
+    })
+  );
+
+  return {
+    success: true,
+    context: {
+      courseId: "course-showcase-1",
+      courseName: "B.Tech CSE",
+      classId: "class-showcase-1",
+      classTitle: "Algorithms - Section B",
+    },
+    generatedCount: previews.length,
+    previews,
+    fallback: true,
+    warning: "Database unavailable. Returning showcase mail previews.",
+  };
+}
+
 export async function GET(req: NextRequest) {
   try {
     const prisma = getPrismaClient();
@@ -235,10 +276,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Mail preview GET API error:", error);
-    return NextResponse.json(
-      { error: "Failed to auto-generate low-attendance mail previews" },
-      { status: 500 }
-    );
+    return NextResponse.json(await getShowcaseMailFallback());
   }
 }
 
